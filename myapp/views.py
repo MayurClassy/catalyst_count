@@ -16,14 +16,17 @@ from rest_framework.response import Response
 
 def login_view(request):
     if request.method == "POST":
-        username = request.POST['username']
-        password = request.POST['password']
-        user = authenticate(request, username=username, password=password)
-        if user is not None:
-            login(request, user)
-            return redirect('dashboard')
-        else:
-            messages.error(request, 'Invalid username or password')
+        try:
+            username = request.POST['username']
+            password = request.POST['password']
+            user = authenticate(request, username=username, password=password)
+            if user is not None:
+                login(request, user)
+                return redirect('dashboard')
+            else:
+                messages.error(request, 'Invalid username or password')
+        except Exception as e:
+            messages.error(request, 'An error occurred: {}'.format(str(e)))
     return render(request, 'myapp/login.html')
 
 
@@ -36,13 +39,13 @@ def query_builder_view(request):
     if request.method == 'GET' and form.is_valid():
         queryset = DataRecord.objects.all()
         
-        # Apply filters based on form input
+       
         for field, value in form.cleaned_data.items():
             if value:
                 filter_kwargs = {f"{field}__icontains": value}
                 queryset = queryset.filter(**filter_kwargs)
         
-        # Remove duplicates
+      
         queryset = queryset.distinct()
         
         record_count = queryset.count()
@@ -54,7 +57,7 @@ def query_builder_view(request):
             'total_employee_estimate'
         ))
 
-        # Get record count
+       
        
 
     return render(request, 'myapp/query_builder.html', {'query_form': form, 'data': data, 'record_count': record_count})
@@ -83,8 +86,8 @@ def users_list(request):
         if form.is_valid():
             user = form.save(commit=False)
             user.set_password(form.cleaned_data['password'])
-            user.is_superuser = True  # Grant superuser access
-            user.is_staff = True      # Required to access the admin site
+            user.is_superuser = True  
+            user.is_staff = True      
             user.save()
             messages.success(request, 'New user has been successfully added!')
             return redirect('users_list')
