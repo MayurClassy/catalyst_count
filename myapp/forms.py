@@ -1,4 +1,6 @@
 from django import forms
+from django import forms
+from django.contrib.auth.models import User
 
 class UploadCSVForm(forms.Form):
     csv_file = forms.FileField()
@@ -17,4 +19,11 @@ class QueryBuilderForm(forms.Form):
     total_employee_estimate = forms.IntegerField(required=False)
 
 
+
+class CustomUserCreationForm(forms.ModelForm):
+    password = forms.CharField(widget=forms.PasswordInput)
+
+    class Meta:
+        model = User
+        fields = ['username', 'email', 'password']
 

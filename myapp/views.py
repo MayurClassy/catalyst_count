@@ -1,4 +1,3 @@
-
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
@@ -8,9 +7,12 @@ from django.core.files.storage import FileSystemStorage
 from django.contrib.auth.models import User
 import csv
 import codecs
-
-from .forms import UploadCSVForm, QueryBuilderForm
+from .forms import CustomUserCreationForm, UploadCSVForm, QueryBuilderForm
 from .models import DataRecord
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+# from .serializers import DataRecordSerializer
+
 
 def login_view(request):
     if request.method == "POST":
@@ -25,13 +27,6 @@ def login_view(request):
     return render(request, 'myapp/login.html')
 
 
-
-
-
-
-from django.shortcuts import render
-from .forms import QueryBuilderForm
-from .models import DataRecord
 
 def query_builder_view(request):
     form = QueryBuilderForm(request.GET or None)
@@ -66,14 +61,6 @@ def query_builder_view(request):
 
 
 
-
-# views.py
-from django.http import JsonResponse
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
-from .models import DataRecord
-from .serializers import DataRecordSerializer
-
 @api_view(['GET'])
 def record_count_view(request):
     filters = request.GET
@@ -89,26 +76,21 @@ def record_count_view(request):
 
 
 
-
-from django.shortcuts import render, redirect
-from django.contrib.auth.models import User
-
-def users_view(request):
+def users_list(request):
     users = User.objects.all()
-    return render(request, 'myapp/users.html', {'users': users})
-
-def add_user_view(request):
     if request.method == 'POST':
-        username = request.POST.get('username')
-        email = request.POST.get('email')
-        password = request.POST.get('password')
-        
-        if username and email and password:
-            User.objects.create_user(username=username, email=email, password=password)
-            return redirect('users')
-        else:
-            return redirect('users')
-    return redirect('users')
+        form = CustomUserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save(commit=False)
+            user.set_password(form.cleaned_data['password'])
+            user.is_superuser = True  # Grant superuser access
+            user.is_staff = True      # Required to access the admin site
+            user.save()
+            messages.success(request, 'New user has been successfully added!')
+            return redirect('users_list')
+    else:
+        form = CustomUserCreationForm()
+    return render(request, 'myapp/users.html', {'users': users, 'form': form})
 
 
 
@@ -161,6 +143,8 @@ def dashboard_view(request):
     query_form = QueryBuilderForm()
     users = User.objects.all()
     return render(request, 'myapp/dashboard.html', {'form': form, 'query_form': query_form, 'users': users})
+
+
 
 
 
