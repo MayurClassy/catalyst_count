@@ -1,0 +1,58 @@
+{% load i18n %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% trans "Sign In" %}</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        .login-container {
+            max-width: 500px;
+            margin: 50px auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="container login-container">
+        <h2 class="text-center">{% trans "Sign In" %}</h2>
+        {% if form.non_field_errors %}
+        <div class="alert alert-danger" role="alert">
+            {% for error in form.non_field_errors %}
+            <p>{{ error }}</p>
+            {% endfor %}
+        </div>
+        {% endif %}
+        <form method="post" action="{% url 'account_login' %}">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="id_login">{% trans "Login" %}</label>
+                <input type="text" name="login" id="id_login" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label for="id_password">{% trans "Password" %}</label>
+                <input type="password" name="password" id="id_password" class="form-control" required>
+            </div>
+            <div class="form-group form-check">
+                <input type="checkbox" name="remember" id="id_remember" class="form-check-input">
+                <label for="id_remember" class="form-check-label">{% trans "Remember Me" %}</label>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">{% trans "Sign In" %}</button>
+        </form>
+        <p class="text-center mt-3">
+            <a href="{% url 'account_reset_password' %}">{% trans "Forgot your password?" %}</a>
+        </p>
+        <p class="text-center">
+            <a href="{% url 'account_signup' %}">{% trans "Don't have an account? Sign up" %}</a>
+        </p>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>
