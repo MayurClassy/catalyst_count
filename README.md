@@ -1,0 +1,1 @@
+I have developed a Django application that allows users to upload large CSV files and filter records using the Query Builder tab. Additionally, the application includes a user management module where users can view and add new users.
