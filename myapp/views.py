@@ -30,7 +30,7 @@ def login_view(request):
     return render(request, 'myapp/login.html')
 
 
-
+@login_required
 def query_builder_view(request):
     form = QueryBuilderForm(request.GET or None)
     data = []
@@ -78,7 +78,7 @@ def record_count_view(request):
     return Response({'record_count': record_count})
 
 
-
+@login_required
 def users_list(request):
     users = User.objects.all()
     if request.method == 'POST':
