@@ -1,3 +1,6 @@
+import os
+import csv
+import codecs
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
@@ -5,14 +8,11 @@ from django.contrib import messages
 from django.http import JsonResponse
 from django.core.files.storage import FileSystemStorage
 from django.contrib.auth.models import User
-import csv
-import codecs
 from .forms import CustomUserCreationForm, UploadCSVForm, QueryBuilderForm
 from .models import DataRecord
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-# from .serializers import DataRecordSerializer
-
+from django.views.decorators.csrf import csrf_exempt
 
 def login_view(request):
     if request.method == "POST":
@@ -39,28 +39,32 @@ def query_builder_view(request):
     if request.method == 'GET' and form.is_valid():
         queryset = DataRecord.objects.all()
         
-       
+        filters_applied = False
         for field, value in form.cleaned_data.items():
             if value:
                 filter_kwargs = {f"{field}__icontains": value}
                 queryset = queryset.filter(**filter_kwargs)
-        
-      
-        queryset = queryset.distinct()
+                filters_applied = True
         
         record_count = queryset.count()
         
-        # Convert queryset to list of dictionaries
         data = list(queryset.values(
             'name', 'domain', 'year_founded', 'industry', 'size_range', 
             'locality', 'country', 'linkedin_url', 'current_employee_estimate', 
             'total_employee_estimate'
         ))
 
-       
-       
+    else:
+        
+        record_count = DataRecord.objects.count()
 
-    return render(request, 'myapp/query_builder.html', {'query_form': form, 'data': data, 'record_count': record_count})
+    return render(request, 'myapp/query_builder.html', {
+        'query_form': form, 
+        'data': data, 
+        'record_count': record_count,
+    })
+
+
 
 
 
@@ -150,4 +154,57 @@ def dashboard_view(request):
 
 
 
+@csrf_exempt
+def upload_chunk(request):
+    if request.method == 'POST':
+        file = request.FILES.get('file')
+        chunk_index = int(request.POST.get('chunk_index', 0))
+        total_chunks = int(request.POST.get('total_chunks', 0))
+        filename = request.POST.get('filename')
 
+        if not file:
+            return JsonResponse({'status': 'No file uploaded'}, status=400)
+
+        fs = FileSystemStorage()
+        chunk_path = fs.save(f'{filename}.part{chunk_index}', file)
+        
+        if chunk_index + 1 == total_chunks:
+            
+            full_path = fs.path(filename)
+            with open(full_path, 'wb') as full_file:
+                for i in range(total_chunks):
+                    part_path = fs.path(f'{filename}.part{i}')
+                    with open(part_path, 'rb') as part_file:
+                        full_file.write(part_file.read())
+                    os.remove(part_path)
+            
+           
+            process_file(full_path)
+            
+            return JsonResponse({'status': 'File uploaded and processed successfully!'})
+
+        return JsonResponse({'status': 'Chunk uploaded successfully!'})
+
+    return JsonResponse({'status': 'Failed to upload chunk.'}, status=400)
+
+def process_file(filepath):
+
+    with open(filepath, 'rb') as f:
+        reader = csv.DictReader(codecs.iterdecode(f, 'utf-8'))
+        for row in reader:
+            mapped_row = {
+                'name': row.get('name'),
+                'domain': row.get('domain'),
+                'year_founded': row.get('year founded'),
+                'industry': row.get('industry'),
+                'size_range': row.get('size range'),
+                'locality': row.get('locality'),
+                'country': row.get('country'),
+                'linkedin_url': row.get('linkedin url'),
+                'current_employee_estimate': row.get('current employee estimate'),
+                'total_employee_estimate': row.get('total employee estimate'),
+            }
+            try:
+                DataRecord.objects.create(**mapped_row)
+            except Exception as e:
+                print(f"Error saving record {mapped_row}: {e}")

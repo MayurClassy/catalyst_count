@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -53,7 +52,7 @@
             <div class="tab-pane fade show active" id="upload" role="tabpanel" aria-labelledby="upload-tab">
                 <div class="upload-form-container">
                     <h3>Upload Data</h3>
-                    <form id="uploadForm" method="POST" enctype="multipart/form-data" action="{% url 'dashboard' %}">
+                    <form id="uploadForm" method="POST" enctype="multipart/form-data">
                         {% csrf_token %}
                         <div class="form-group">
                             <input type="file" class="form-control-file" id="fileInput" name="file">
@@ -69,38 +68,59 @@
                     const uploadForm = document.getElementById('uploadForm');
                     const progressBar = document.getElementById('progressBar');
                     const uploadStatus = document.getElementById('uploadStatus');
-                
+
                     uploadForm.addEventListener('submit', function(event) {
                         event.preventDefault();
-                        const formData = new FormData(uploadForm);
-                        const xhr = new XMLHttpRequest();
-                        xhr.open('POST', '', true); 
+                        const fileInput = document.getElementById('fileInput');
+                        const file = fileInput.files[0];
+                        const chunkSize = 1024 * 1024; // 1MB chunks
+                        const totalChunks = Math.ceil(file.size / chunkSize);
+                        let chunkIndex = 0;
 
-                        xhr.upload.addEventListener('progress', function(e) {
-                            if (e.lengthComputable) {
-                                const percentComplete = (e.loaded / e.total) * 100;
-                                progressBar.style.width = percentComplete + '%';
-                                progressBar.setAttribute('aria-valuenow', percentComplete);
-                                progressBar.textContent = Math.round(percentComplete) + '%';
-                            }
-                        });
+                        function uploadNextChunk() {
+                            const start = chunkIndex * chunkSize;
+                            const end = Math.min(start + chunkSize, file.size);
+                            const formData = new FormData();
+                            formData.append('file', file.slice(start, end));
+                            formData.append('chunk_index', chunkIndex);
+                            formData.append('total_chunks', totalChunks);
+                            formData.append('filename', file.name);
 
-                        xhr.addEventListener('load', function() {
-                            if (xhr.status === 200) {
-                                uploadStatus.textContent = 'File uploaded successfully!';
-                            } else {
-                                uploadStatus.textContent = 'Error uploading file!';
-                            }
-                        });
+                            const xhr = new XMLHttpRequest();
+                            xhr.open('POST', '{% url "upload_chunk" %}', true); // Change this to your chunk upload URL
 
-                        xhr.send(formData);
+                            xhr.upload.addEventListener('progress', function(e) {
+                                if (e.lengthComputable) {
+                                    const percentComplete = (e.loaded / e.total) * 100;
+                                    progressBar.style.width = percentComplete + '%';
+                                    progressBar.setAttribute('aria-valuenow', percentComplete);
+                                    progressBar.textContent = Math.round(percentComplete) + '%';
+                                }
+                            });
+
+                            xhr.addEventListener('load', function() {
+                                if (xhr.status === 200) {
+                                    chunkIndex++;
+                                    if (chunkIndex < totalChunks) {
+                                        uploadNextChunk();
+                                    } else {
+                                        uploadStatus.textContent = 'File uploaded successfully!';
+                                    }
+                                } else {
+                                    uploadStatus.textContent = 'Error uploading file!';
+                                }
+                            });
+
+                            xhr.send(formData);
+                        }
+
+                        uploadNextChunk();
                     });
                 </script>
             </div>
         </div>
     </div>
 
-  
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>

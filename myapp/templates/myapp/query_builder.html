@@ -1,5 +1,5 @@
 
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -12,7 +12,6 @@
         }
         .form-group {
             margin-right: 10px;
-            /* margin-bottom: 15px; */
             margin-top: 30px;
             margin-left: 15px;
         }
@@ -30,27 +29,23 @@
 
         <ul class="nav nav-tabs" id="myTab" role="tablist">
             <li class="nav-item">
-                <a class="nav-link" href="http://127.0.0.1:8000/dashboard">Upload Data</a>
+                <a class="nav-link" href="{% url 'dashboard' %}">Upload Data</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link active" href="http://127.0.0.1:8000/query_builder">Query Builder</a>
+                <a class="nav-link active" href="{% url 'query_builder' %}">Query Builder</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="http://127.0.0.1:8000/users">Users</a>
+                <a class="nav-link" href="{% url 'users' %}">Users</a>
             </li>
             <li class="nav-item ml-auto">
                 <a class="nav-link" id="logout-tab" href="{% url 'logout' %}" role="tab" aria-controls="logout" aria-selected="false">Logout</a>
             </li>
         </ul>
 
+        <div class="alert alert-success">
+            {{ record_count }} records found{{ form.is_valid|yesno:", based on your query." }} 
+        </div>
 
-        {% if record_count %}
-            <div class="alert alert-success">
-                {{ record_count }} records found for the query
-            </div>
-        {% endif %}
-
-        
         <form id="queryBuilderForm" method="GET" class="form-inline">
             {% csrf_token %}
             
@@ -76,10 +71,10 @@
                 <input type="number" class="form-control" name="linkedin_url" placeholder="LinkedIn Url">
             </div>
             <div class="form-group">
-                <input type="number" class="form-control" name="current_employee_estimate" placeholder="current_employee_estimate">
+                <input type="number" class="form-control" name="current_employee_estimate" placeholder="Current Employee Estimate">
             </div>
             <div class="form-group">
-                <input type="number" class="form-control" name="total_employee_estimate" placeholder="total_employee_estimate">
+                <input type="number" class="form-control" name="total_employee_estimate" placeholder="Total Employee Estimate">
             </div>
             <div class="form-group w-100 text-center">
                 <button type="submit" class="btn btn-primary">Query Data</button>
@@ -127,7 +122,6 @@
         </div>
     </div>
 
-
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
@@ -137,8 +131,6 @@
             document.getElementById('queryResults').innerHTML = '';
         }
     </script>
-
-
-
 </body>
 </html>
+
