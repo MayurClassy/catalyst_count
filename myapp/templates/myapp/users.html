@@ -1,9 +1,7 @@
-
 <!DOCTYPE html>
 <html>
 <head>
     <title>Users</title>
-    
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <style>
         .form-container {
@@ -23,8 +21,14 @@
 </head>
 <body>
 <div class="container">
-    <!-- <h1 class="mt-5">Users</h1> -->
     <h2 class="text-center">Users</h2>
+    {% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+    </div>
+{% endif %}
     <ul class="nav nav-tabs" id="myTab" role="tablist">
         <li class="nav-item">
             <a class="nav-link" href="http://127.0.0.1:8000/dashboard">Upload Data</a>
@@ -43,16 +47,18 @@
     <div id="form-container" class="form-container">
         <form method="post" class="mt-3">
             {% csrf_token %}
-            <div class="form-group">
-                {{ form.username.label_tag }} {{ form.username }}
+            <div class="form-row">
+                <div class="form-group col-md-4">
+                    {{ form.username.label_tag }} {{ form.username }}
+                </div>
+                <div class="form-group col-md-4">
+                    {{ form.email.label_tag }} {{ form.email }}
+                </div>
+                <div class="form-group col-md-4">
+                    {{ form.password.label_tag }} {{ form.password }}
+                </div>
             </div>
-            <div class="form-group">
-                {{ form.email.label_tag }} {{ form.email }}
-            </div>
-            <div class="form-group">
-                {{ form.password.label_tag }} {{ form.password }}
-            </div>
-            <button type="submit" class="btn btn-success">Save</button>
+            <button type="submit" class="btn btn-primary">Save</button>
         </form>
     </div>
 
@@ -76,7 +82,8 @@
     </table>
 </div>
 </body>
-</html> 
+</html>
+
 
 
 
